@@ -1,7 +1,0 @@
-User-agent: *
-Allow: /
-
-# No domain is set yet (.com vs .ir still undecided), so the Sitemap
-# line is left out to avoid pointing crawlers at the wrong address.
-# Once you have a domain, add this line back in:
-# Sitemap: https://YOUR-DOMAIN-HERE/sitemap.xml
