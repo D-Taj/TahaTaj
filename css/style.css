@@ -1,0 +1,552 @@
+/* ==========================================================================
+   TAHA TAJ — PERSONAL SITE STYLESHEET
+   A single-page personal site: black background, neon turquoise/blue
+   accents, circuit-line motif carried over from the studio-site version.
+   ========================================================================== */
+
+/* ---------- Design tokens ------------------------------------------------ */
+:root {
+  /* Surfaces */
+  --bg: #050708;              /* base black */
+  --bg-soft: #0a0f11;         /* section alt background */
+  --surface: #0d1416;         /* card surface */
+  --surface-line: #1c2a2c;    /* hairline borders */
+
+  /* Accents (neon turquoise / blue) */
+  --turquoise: #00f5d4;
+  --turquoise-dim: #0891a8;
+  --blue: #00c2ff;
+  --accent-gradient: linear-gradient(120deg, var(--turquoise) 0%, var(--blue) 100%);
+
+  /* Text */
+  --text: #eafffb;
+  --text-muted: #8ba3a1;
+  --text-faint: #4d5f5e;
+
+  /* Type */
+  --font-display: "Space Grotesk", "Segoe UI", sans-serif;
+  --font-body: "Inter", "Segoe UI", sans-serif;
+
+  /* Layout */
+  --max-width: 1180px;
+  --radius: 14px;
+  --radius-pill: 999px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---------- Reset ---------------------------------------------------------*/
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 96px; /* keeps anchored sections clear of the fixed island */
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; display: block; }
+a { color: inherit; text-decoration: none; }
+ul { list-style: none; }
+button { font: inherit; cursor: pointer; }
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.eyebrow {
+  display: inline-block;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--turquoise);
+  margin-bottom: 14px;
+}
+
+.section-head { max-width: 640px; margin-bottom: 48px; }
+.section-head h2 { font-size: clamp(1.7rem, 4vw, 2.6rem); }
+.section-head p { color: var(--text-muted); margin-top: 12px; font-size: 1.02rem; }
+
+section { position: relative; padding: 120px 0; }
+
+/* ---------- Living background --------------------------------------------
+   A fixed blueprint-style grid + slow-drifting glow blobs + film-grain
+   texture. Pure CSS, GPU-friendly, paused for reduced-motion users.       */
+.bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.bg-grid {
+  position: absolute;
+  inset: -1px;
+  background-image:
+    linear-gradient(rgba(0, 245, 212, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 245, 212, 0.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 20%, #000 40%, transparent 90%);
+}
+
+.bg-glow {
+  position: absolute;
+  width: 60vw;
+  height: 60vw;
+  max-width: 720px;
+  max-height: 720px;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.35;
+  animation: drift 26s ease-in-out infinite alternate;
+}
+.bg-glow.one   { top: -10%; left: -10%; background: var(--turquoise-dim); }
+.bg-glow.two   { bottom: -15%; right: -10%; background: var(--blue); animation-duration: 32s; animation-delay: -6s; }
+
+@keyframes drift {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(6vw, 4vw) scale(1.12); }
+}
+
+.bg-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-glow { animation: none; }
+}
+
+/* ==========================================================================
+   LOADING SCREEN
+   Full-viewport cover shown on first paint, faded and removed by
+   script.js once the page is ready.
+   ========================================================================== */
+#loader {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: var(--bg);
+  transition: opacity 0.5s var(--ease-out), visibility 0.5s var(--ease-out);
+}
+#loader.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+.loader-ring {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, var(--turquoise), var(--blue), transparent 70%);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+  animation: spin 1s linear infinite;
+}
+.loader-text {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.2em;
+  color: var(--text-faint);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .loader-ring { animation-duration: 2.4s; }
+}
+
+/* ==========================================================================
+   LANGUAGE TOGGLE
+   ========================================================================== */
+.lang-toggle {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.1rem;
+  z-index: 1000;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1.5px solid var(--surface-line);
+  background: rgba(13, 20, 22, 0.85);
+  backdrop-filter: blur(10px);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.lang-toggle:hover { border-color: var(--turquoise); color: var(--turquoise); }
+
+/* Mirror the toggle to the left in RTL so it never collides with the
+   (also-centered) island nav. */
+html[dir="rtl"] .lang-toggle { right: auto; left: 1.1rem; }
+
+/* ==========================================================================
+   ISLAND NAVIGATION
+   Fixed pill at the top. Expands into a dropdown menu (Animation 1, retuned
+   to the site palette). Links scroll to sections and close the menu.
+   ========================================================================== */
+.island {
+  position: fixed;
+  top: 1.1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem;
+  background: rgba(13, 20, 22, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid var(--surface-line);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  width: auto;
+  overflow: hidden;
+}
+
+.island-logo--cont {
+  position: relative;
+  width: 0px;
+  height: 22px;
+  pointer-events: none;
+}
+
+.island-logo {
+  position: absolute;
+  opacity: 0;
+  margin-left: 0.85rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--turquoise);
+  white-space: nowrap;
+}
+
+.menu-btn {
+  width: 100%;
+  height: 34px;
+  background: transparent;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+.menu-btn:focus-visible { outline: 2px solid var(--turquoise); outline-offset: 3px; }
+
+.button-cont { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; }
+.menu-btn svg { overflow: visible; display: block; }
+.menu-btn line { stroke: var(--text-muted); }
+
+/* Overlay + panel */
+.menu-overlay { position: fixed; inset: 0; z-index: 900; pointer-events: none; }
+.menu-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(5, 7, 8, 0.88);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+}
+.menu-panel {
+  border: 1.5px solid var(--surface-line);
+  position: absolute;
+  visibility: hidden;
+  top: 5rem; left: 50%;
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 0.4rem;
+  width: 90vw; max-width: 380px;
+  transform: translateX(-50%);
+}
+
+.menu-link {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1.1rem;
+  border-radius: 10px;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+}
+.menu-link + .menu-link { border-top: 1px solid var(--surface-line); border-radius: 0; }
+.menu-link:first-child { border-radius: 10px 10px 0 0; }
+.menu-link:last-child  { border-radius: 0 0 10px 10px; }
+.menu-link:hover, .menu-link:focus-visible { color: var(--turquoise); }
+.menu-link:focus-visible { outline: 2px solid var(--turquoise); outline-offset: -2px; }
+
+.link-num {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  color: var(--text-faint);
+}
+
+/* ==========================================================================
+   HERO
+   Now doubles as the "about me" section: avatar, name, bio, and skills
+   all live here since the separate Team section was removed.
+   ========================================================================== */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding-top: 96px;
+}
+.hero-inner { max-width: 760px; }
+
+.avatar {
+  width: 108px;
+  height: 108px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--turquoise-dim);
+  box-shadow: 0 0 0 6px rgba(0, 245, 212, 0.06);
+  margin-bottom: 22px;
+}
+
+.hero h1 {
+  font-size: clamp(2.2rem, 6vw, 3.8rem);
+  line-height: 1.12;
+}
+.hero h1 .accent {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero p, .hero-about {
+  margin-top: 22px;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  max-width: 56ch;
+}
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 40px;
+}
+
+.skills-block { margin-top: 36px; }
+.skills-block .eyebrow { display: block; margin-bottom: 0; }
+
+/* ==========================================================================
+   MAGNETIC BUTTONS  (Animation 2, retuned + reused site-wide for CTAs)
+   ========================================================================== */
+.mag-zone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.mag-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 15px 30px;
+  border-radius: var(--radius-pill);
+  border: none;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.92rem;
+  overflow: hidden;
+  will-change: transform;
+}
+.mag-btn .bg { position: absolute; inset: 0; border-radius: var(--radius-pill); z-index: 0; }
+.mag-btn .label { position: relative; z-index: 1; pointer-events: none; }
+
+.mag-btn.primary { color: #04211d; }
+.mag-btn.primary .bg { background: var(--accent-gradient); }
+
+.mag-btn.ghost {
+  color: var(--text);
+  background: transparent;
+}
+.mag-btn.ghost .bg { border: 1.5px solid var(--surface-line); border-radius: var(--radius-pill); }
+.mag-btn.ghost:hover .bg { border-color: var(--turquoise); }
+
+/* ==========================================================================
+   SKILLS CHIPS  (used inside the hero "about me" block)
+   ========================================================================== */
+/* .services gives the Work section its alternate background band —
+   kept as a generic section-background utility class. */
+.services { background: var(--bg-soft); border-top: 1px solid var(--surface-line); border-bottom: 1px solid var(--surface-line); }
+
+.chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+.chip {
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--surface-line);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 0.86rem;
+  transition: border-color 0.2s, color 0.2s;
+}
+.chip:hover { border-color: var(--turquoise); color: var(--text); }
+
+/* Visible Persian summary block (SEO + Persian-speaking visitors) */
+#fa-services { padding: 60px 0 100px; }
+.fa-summary {
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: right;
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 2;
+}
+.fa-summary strong { color: var(--turquoise); font-weight: 600; }
+
+/* ==========================================================================
+   PORTFOLIO
+   Horizontal, scroll-snapping track of simple cards: a fixed-ratio photo
+   box (object-fit: cover, so it always fills the box completely — no
+   letterbox bars, no gaps, no border, regardless of the source image's
+   own dimensions) with a single title underneath.
+   Adding/removing work is just editing the WORK array in js/script.js.
+   ========================================================================== */
+.work-track-wrap { position: relative; }
+.work-track {
+  display: flex;
+  gap: 22px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding: 6px 4px 28px;
+  margin: 0 -4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--turquoise-dim) transparent;
+}
+.work-track::-webkit-scrollbar { height: 6px; }
+.work-track::-webkit-scrollbar-thumb { background: var(--turquoise-dim); border-radius: 6px; }
+
+.work-card {
+  flex: 0 0 auto;
+  width: min(280px, 72vw);
+  scroll-snap-align: start;
+}
+
+/* Fixed-ratio box: whatever the source photo's real width/height is,
+   it gets scaled and center-cropped to completely fill this box — so
+   every card looks identical in shape, on any screen, with zero
+   leftover background showing through as a "border". */
+.work-thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--surface-line);
+}
+.work-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.35s var(--ease-out);
+}
+.work-card:hover .work-thumb img { transform: scale(1.06); }
+
+.work-title {
+  margin-top: 12px;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.work-more { margin-top: 30px; display: flex; justify-content: center; }
+.text-link {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--turquoise);
+  border-bottom: 1px solid var(--turquoise-dim);
+  padding-bottom: 3px;
+  transition: opacity 0.2s;
+}
+.text-link:hover { opacity: 0.75; }
+
+/* ==========================================================================
+   CONTACT
+   ========================================================================== */
+.contact { background: var(--bg-soft); border-top: 1px solid var(--surface-line); }
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+}
+
+.contact-card {
+  background: var(--surface);
+  border: 1px solid var(--surface-line);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+
+.contact-card .label {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.contact-card .value { margin-top: 10px; font-family: var(--font-display); font-size: 1.05rem; }
+.contact-card a.value:hover { color: var(--turquoise); }
+
+/* ==========================================================================
+   FOOTER
+   ========================================================================== */
+footer {
+  padding: 36px 0;
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 0.82rem;
+  border-top: 1px solid var(--surface-line);
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+@media (max-width: 640px) {
+  section { padding: 84px 0; }
+  .hero { padding-top: 110px; }
+  .contact-grid { grid-template-columns: 1fr; }
+  .avatar { width: 88px; height: 88px; }
+}
+
+/* Keyboard accessibility: visible focus ring everywhere */
+a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--turquoise);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
